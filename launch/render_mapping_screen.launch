@@ -1,0 +1,15 @@
+<launch>
+    <param name="use_sim_time" value="true"/>
+
+    <!-- Mapping Screen Renderer -->
+    <group ns="renders">
+        <node pkg="map_render_engine" name="mapping_screen_renderer" type="render_mapping_screen" output="screen"/>
+    </group>
+
+    <!-- Rosbag Player -->
+    <node pkg="rosbag" type="play" name="bagplayer" args="/home/yuanqichau/mapping_bag.bag -r 5 -l --clock" />
+
+    <!-- Rviz  -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d /home/yuanqichau/Desktop/clustering.rviz" />
+
+</launch>
