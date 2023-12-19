@@ -10,6 +10,6 @@
     <node pkg="rosbag" type="play" name="bagplayer" args="/home/yuanqichau/mapping_bag.bag -r 5 -l --clock" />
 
     <!-- Rviz  -->
-    <node pkg="rviz" type="rviz" name="rviz" args="-d /home/yuanqichau/Desktop/clustering.rviz" />
+    <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d /home/yuanqichau/Desktop/clustering.rviz" /> -->
 
 </launch>
