@@ -1,0 +1,18 @@
+name: auto_build_package_on_commit
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+
+  load_yaml_config:
+    uses: perceptron-inc/shared_workflows/.github/workflows/load_yaml_config.yml@main
+    with:
+      config_file_path: .github/config.yml
+
+  build_ros_package:
+    needs: load_yaml_config
+    uses: perceptron-inc/shared_workflows/.github/workflows/build_ros_package.yml@main
+    with:
+      docker_image_tag: ${{ needs.load_yaml_config.outputs.docker_image_tag }}

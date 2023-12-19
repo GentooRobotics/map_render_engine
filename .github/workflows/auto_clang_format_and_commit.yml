@@ -1,0 +1,9 @@
+name: auto_clang_format_and_commit
+
+on:
+    push:
+    workflow_dispatch:
+
+jobs:
+    clang_format_and_commit:
+        uses: perceptron-inc/shared_workflows/.github/workflows/clang_format_and_commit.yml@clang-format
