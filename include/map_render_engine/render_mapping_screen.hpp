@@ -13,11 +13,9 @@
 class MappingScreenRenderer {
 
 public:
-
   MappingScreenRenderer();
 
 private:
-
   void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr &msg_map);
 
   void timerCallback(const ros::TimerEvent &event);
@@ -48,5 +46,4 @@ private:
   tf2_ros::TransformListener m_tf_listener{m_tf_buffer};
   geometry_msgs::TransformStamped m_robot_to_map_tf;
   nav_msgs::MapMetaData m_map_meta_data;
-
 };
