@@ -48,5 +48,6 @@ private:
   tf2_ros::TransformListener m_tf_listener{m_tf_buffer};
   geometry_msgs::TransformStamped m_robot_to_map_tf;
   nav_msgs::MapMetaData m_map_meta_data;
+  bool m_start_timer;
 
 };

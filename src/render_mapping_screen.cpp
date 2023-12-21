@@ -14,11 +14,12 @@ MappingScreenRenderer::MappingScreenRenderer()
   m_robot_icon_path = m_nh_private.param<std::string>("robot_icon", "robot.png");
 
   // Variables Initialization
-  m_map_render = cv::Mat(300, 300, CV_8UC3);
-  m_robot_icon = cv::imread(m_robot_icon_path);
-  m_robot_icon_rotated = cv::imread(m_robot_icon_path);
-  // m_robot_icon = cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
-  // m_robot_icon_rotated = cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
+  m_map_render = cv::Mat(300, 300, CV_8UC4);
+  // m_robot_icon = cv::imread(m_robot_icon_path);
+  // m_robot_icon_rotated = cv::imread(m_robot_icon_path);
+  m_robot_icon = cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
+  m_robot_icon_rotated = cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
+  m_start_timer = false;
 
 #ifdef DEBUG_MODE
   cv::imshow("Robot Icon", m_robot_icon);
@@ -31,10 +32,6 @@ MappingScreenRenderer::MappingScreenRenderer()
   // ROS Publishers
   m_publisher_rendered_image =
       m_nh.advertise<sensor_msgs::Image>("mapping_screen", 1);
-
-  // ROS Timer
-  m_timer_publish = m_nh.createTimer(
-      ros::Duration(0.1), &MappingScreenRenderer::timerCallback, this);
 
   ros::spin();
 }
@@ -52,7 +49,7 @@ void MappingScreenRenderer::mapCallback(
   if (m_map_render.cols != msg_map->info.width ||
       m_map_render.rows != msg_map->info.height) {
     m_map_render = cv::Mat::zeros(
-        cv::Size(msg_map->info.width, msg_map->info.height), CV_8UC3);
+        cv::Size(msg_map->info.width, msg_map->info.height), CV_8UC4);
   }
 
 #ifdef DEBUG_MODE
@@ -74,20 +71,22 @@ void MappingScreenRenderer::mapCallback(
 
       // Unknown Pixels, Set to Gray
       if (current_data == -1) {
-        p[j * 3 + 0] = static_cast<std::uint8_t>(128);
-        p[j * 3 + 1] = static_cast<std::uint8_t>(128);
-        p[j * 3 + 2] = static_cast<std::uint8_t>(128);
+        p[j * 4 + 0] = static_cast<std::uint8_t>(128);
+        p[j * 4 + 1] = static_cast<std::uint8_t>(128);
+        p[j * 4 + 2] = static_cast<std::uint8_t>(128);
+        p[j * 4 + 3] = static_cast<std::uint8_t>(0);
       }
       // Known Pixels, Set to 0-255 based on intensity
       else {
         // Probability to Pixel Value Conversion
         static constexpr float scale_factor = 255. / 100.;
-        p[j * 3 + 0] =
+        p[j * 4 + 0] =
             255 - static_cast<std::uint8_t>(current_data * scale_factor);
-        p[j * 3 + 1] =
+        p[j * 4 + 1] =
             255 - static_cast<std::uint8_t>(current_data * scale_factor);
-        p[j * 3 + 2] =
+        p[j * 4 + 2] =
             255 - static_cast<std::uint8_t>(current_data * scale_factor);
+        p[j * 4 + 3] = 0;
       }
     }
   }
@@ -113,7 +112,15 @@ void MappingScreenRenderer::mapCallback(
 #endif
 
   ////////////////////////////////////////////////////////////////
+  // Start Timer 
+  if (!m_start_timer)
+  {  
+    m_timer_publish = m_nh.createTimer(
+        ros::Duration(0.1), &MappingScreenRenderer::timerCallback, this);
+    m_start_timer = true;
+  }
 
+  ////////////////////////////////////////////////////////////////
 }
 
 void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
@@ -166,9 +173,8 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
   x_image = std::round(x_image - m_robot_icon_rotated.cols/2);
   y_image = std::round((m_map_meta_data.height - y_image)  - m_robot_icon_rotated.rows/2);
 
-  cv::Rect roi(x_image, y_image, m_robot_icon_rotated.cols, m_robot_icon_rotated.rows);
-  std::cout << "Roi: " << roi << "\n";
-  std::cout << "robot_icon: " << m_robot_icon.size() << "\n";
+  // Copy Rotated Robot Icon To Map
+  cv::Rect roi(x_image, y_image, m_robot_icon_rotated.cols, m_robot_icon_rotated.rows);  
   m_robot_icon_rotated.copyTo(m_map_render(roi));
 
 #ifdef DEBUG_MODE
