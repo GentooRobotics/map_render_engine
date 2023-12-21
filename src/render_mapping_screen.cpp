@@ -1,8 +1,8 @@
 #include "map_render_engine/render_mapping_screen.hpp"
 
 void rotateImage(cv::Mat &input, cv::Mat &output, double angle) {
-  const cv::Point2f center(input.cols / 2.0, input.rows / 2.0);
-  const cv::Mat rotationMatrix = cv::getRotationMatrix2D(center, angle, 1.0);
+  cv::Point2f center(input.cols / 2.0, input.rows / 2.0);
+  cv::Mat rotationMatrix = cv::getRotationMatrix2D(center, angle, 1.0);
 
   cv::warpAffine(input, output, rotationMatrix, input.size());
 }
@@ -69,22 +69,22 @@ void MappingScreenRenderer::mapCallback(
 
       // Unknown Pixels, Set to Gray
       if (current_data == -1) {
-        p[j * 4 + 0] = static_cast<std::uint8_t>(128);
-        p[j * 4 + 1] = static_cast<std::uint8_t>(128);
-        p[j * 4 + 2] = static_cast<std::uint8_t>(128);
-        p[j * 4 + 3] = static_cast<std::uint8_t>(0);
+        p[j * 4 + 0] = static_cast<std::uint8_t>(128); // r
+        p[j * 4 + 1] = static_cast<std::uint8_t>(128); // g
+        p[j * 4 + 2] = static_cast<std::uint8_t>(128); // b
+        p[j * 4 + 3] = static_cast<std::uint8_t>(255);   // a
       }
       // Known Pixels, Set to 0-255 based on intensity
       else {
         // Probability to Pixel Value Conversion
         static constexpr float scale_factor = 255. / 100.;
         p[j * 4 + 0] =
-            255 - static_cast<std::uint8_t>(current_data * scale_factor);
+            255 - static_cast<std::uint8_t>(current_data * scale_factor); // r
         p[j * 4 + 1] =
-            255 - static_cast<std::uint8_t>(current_data * scale_factor);
+            255 - static_cast<std::uint8_t>(current_data * scale_factor); // g
         p[j * 4 + 2] =
-            255 - static_cast<std::uint8_t>(current_data * scale_factor);
-        p[j * 4 + 3] = 0;
+            255 - static_cast<std::uint8_t>(current_data * scale_factor); // b
+        p[j * 4 + 3] = 255;                                               // a
       }
     }
   }
@@ -163,6 +163,7 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
 #endif
 
   ////////////////////////////////////////////////////////////////
+  // Add Robot Pose on Map Render
   // Calculate Robot Top Left Corner in Image
   double x_image;
   double y_image;
@@ -172,13 +173,39 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
   y_image = std::round((m_map_meta_data.height - y_image)  - m_robot_icon_rotated.rows/2);
 
   // Copy Rotated Robot Icon To Map
-  cv::Rect roi(x_image, y_image, m_robot_icon_rotated.cols, m_robot_icon_rotated.rows);  
-  m_robot_icon_rotated.copyTo(m_map_render(roi));
+  cv::Rect roi(x_image, y_image, m_robot_icon_rotated.cols, m_robot_icon_rotated.rows);
+  cv::Mat original_region = m_map_render(roi).clone(); // part of the render that is going to replaced by robot icon
+  cv::Mat blended_region;
+
+  std::size_t rows = static_cast<std::size_t>(m_map_render(roi).rows);
+  std::size_t cols = static_cast<std::size_t>(m_map_render(roi).cols);
+  std::uint8_t *p; // unsigned char pointer to access value
+  std::uint8_t *p2; // unsigned char pointer to access value
+  for (std::size_t i = 0; i < rows; ++i) {
+    p = m_map_render(roi).ptr<std::uint8_t>(i);
+    p2 = m_robot_icon_rotated.ptr<std::uint8_t>(i);
+    for (size_t j = 0; j < cols; ++j) {
+      // if robot icon's is not transparent
+      // copy pixel value to map render
+      if (p2[j * 4 + 3] != 0) 
+      {
+        p[j * 4 + 0] = p2[j * 4 + 0];
+        p[j * 4 + 1] = p2[j * 4 + 1];
+        p[j * 4 + 2] = p2[j * 4 + 2];
+      }
+    }
+  } 
 
 #ifdef DEBUG_MODE
   cv::imshow("Final Map Render", m_map_render);
   cv::waitKey(1);
 #endif
+
+  ////////////////////////////////////////////////////////////////
+  // Clean Up
+  original_region.copyTo(m_map_render(roi)); // replace the roi with original region 
+
+  ////////////////////////////////////////////////////////////////
 }
 
 int main(int argc, char **argv) {
