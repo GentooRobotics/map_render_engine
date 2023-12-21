@@ -14,8 +14,10 @@ MappingScreenRenderer::MappingScreenRenderer() : m_nh_private{"~"} {
 
   // Variables Initialization
   m_map_render = cv::Mat(300, 300, CV_8UC4);
-  m_robot_icon = cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
-  m_robot_icon_rotated = cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
+  m_robot_icon =
+      cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
+  m_robot_icon_rotated =
+      cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
   m_start_timer = false;
 
 #ifdef DEBUG_MODE
@@ -114,9 +116,8 @@ void MappingScreenRenderer::mapCallback(
 #endif
 
   ////////////////////////////////////////////////////////////////
-  // Start Timer 
-  if (!m_start_timer)
-  {  
+  // Start Timer
+  if (!m_start_timer) {
     m_timer_publish = m_nh.createTimer(
         ros::Duration(0.1), &MappingScreenRenderer::timerCallback, this);
     m_start_timer = true;
@@ -166,13 +167,17 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
   // Calculate Robot Top Left Corner in Image
   double x_image;
   double y_image;
-  x_image = (x - m_map_meta_data.origin.position.x) / m_map_meta_data.resolution;
-  y_image = (y - m_map_meta_data.origin.position.y) / m_map_meta_data.resolution;
-  x_image = std::round(x_image - m_robot_icon_rotated.cols/2);
-  y_image = std::round((m_map_meta_data.height - y_image)  - m_robot_icon_rotated.rows/2);
+  x_image =
+      (x - m_map_meta_data.origin.position.x) / m_map_meta_data.resolution;
+  y_image =
+      (y - m_map_meta_data.origin.position.y) / m_map_meta_data.resolution;
+  x_image = std::round(x_image - m_robot_icon_rotated.cols / 2);
+  y_image = std::round((m_map_meta_data.height - y_image) -
+                       m_robot_icon_rotated.rows / 2);
 
   // Copy Rotated Robot Icon To Map
-  cv::Rect roi(x_image, y_image, m_robot_icon_rotated.cols, m_robot_icon_rotated.rows);  
+  cv::Rect roi(x_image, y_image, m_robot_icon_rotated.cols,
+               m_robot_icon_rotated.rows);
   m_robot_icon_rotated.copyTo(m_map_render(roi));
 
 #ifdef DEBUG_MODE
