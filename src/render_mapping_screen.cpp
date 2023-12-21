@@ -74,7 +74,7 @@ void MappingScreenRenderer::mapCallback(
         p[j * 4 + 0] = static_cast<std::uint8_t>(128); // r
         p[j * 4 + 1] = static_cast<std::uint8_t>(128); // g
         p[j * 4 + 2] = static_cast<std::uint8_t>(128); // b
-        p[j * 4 + 3] = static_cast<std::uint8_t>(255);   // a
+        p[j * 4 + 3] = static_cast<std::uint8_t>(255); // a
       }
       // Known Pixels, Set to 0-255 based on intensity
       else {
@@ -177,13 +177,16 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
                        m_robot_icon_rotated.rows / 2);
 
   // Copy Rotated Robot Icon To Map
-  cv::Rect roi(x_image, y_image, m_robot_icon_rotated.cols, m_robot_icon_rotated.rows);
-  cv::Mat original_region = m_map_render(roi).clone(); // part of the render that is going to replaced by robot icon
+  cv::Rect roi(x_image, y_image, m_robot_icon_rotated.cols,
+               m_robot_icon_rotated.rows);
+  cv::Mat original_region =
+      m_map_render(roi).clone(); // part of the render that is going to replaced
+                                 // by robot icon
   cv::Mat blended_region;
 
   std::size_t rows = static_cast<std::size_t>(m_map_render(roi).rows);
   std::size_t cols = static_cast<std::size_t>(m_map_render(roi).cols);
-  std::uint8_t *p; // unsigned char pointer to access value
+  std::uint8_t *p;  // unsigned char pointer to access value
   std::uint8_t *p2; // unsigned char pointer to access value
   for (std::size_t i = 0; i < rows; ++i) {
     p = m_map_render(roi).ptr<std::uint8_t>(i);
@@ -191,14 +194,13 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
     for (size_t j = 0; j < cols; ++j) {
       // if robot icon's is not transparent
       // copy pixel value to map render
-      if (p2[j * 4 + 3] != 0) 
-      {
+      if (p2[j * 4 + 3] != 0) {
         p[j * 4 + 0] = p2[j * 4 + 0];
         p[j * 4 + 1] = p2[j * 4 + 1];
         p[j * 4 + 2] = p2[j * 4 + 2];
       }
     }
-  } 
+  }
 
 #ifdef DEBUG_MODE
   cv::imshow("Final Map Render", m_map_render);
@@ -207,7 +209,8 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
 
   ////////////////////////////////////////////////////////////////
   // Clean Up
-  original_region.copyTo(m_map_render(roi)); // replace the roi with original region 
+  original_region.copyTo(
+      m_map_render(roi)); // replace the roi with original region
 
   ////////////////////////////////////////////////////////////////
 }
