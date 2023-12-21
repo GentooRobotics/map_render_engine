@@ -212,9 +212,10 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
   std_msgs::Header msg_header;
   msg_header.frame_id = "map";
   msg_header.stamp = event.current_real;
-  sensor_msgs::ImagePtr msg_image = cv_bridge::CvImage(msg_header, "rgb8", m_map_render).toImageMsg();
+  sensor_msgs::ImagePtr msg_image =
+      cv_bridge::CvImage(msg_header, "rgb8", m_map_render).toImageMsg();
   m_publisher_rendered_image.publish(msg_image);
-  
+
   ////////////////////////////////////////////////////////////////
   // Clean Up
   original_region.copyTo(
