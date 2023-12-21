@@ -13,11 +13,9 @@
 class MappingScreenRenderer {
 
 public:
-
   MappingScreenRenderer();
 
 private:
-
   void mapCallback(const nav_msgs::OccupancyGrid::ConstPtr &msg_map);
 
   void timerCallback(const ros::TimerEvent &event);

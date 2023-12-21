@@ -1,22 +1,19 @@
 #include "map_render_engine/render_mapping_screen.hpp"
 
-void rotateImage(cv::Mat& input, cv::Mat& output, double angle)
-{
+void rotateImage(cv::Mat &input, cv::Mat &output, double angle) {
   const cv::Point2f center(input.cols / 2.0, input.rows / 2.0);
   const cv::Mat rotationMatrix = cv::getRotationMatrix2D(center, angle, 1.0);
 
   cv::warpAffine(input, output, rotationMatrix, input.size());
 }
 
-MappingScreenRenderer::MappingScreenRenderer()
-    : m_nh_private{"~"} {
+MappingScreenRenderer::MappingScreenRenderer() : m_nh_private{"~"} {
   // ROS Node Parameters
-  m_robot_icon_path = m_nh_private.param<std::string>("robot_icon", "robot.png");
+  m_robot_icon_path =
+      m_nh_private.param<std::string>("robot_icon", "robot.png");
 
   // Variables Initialization
   m_map_render = cv::Mat(300, 300, CV_8UC4);
-  // m_robot_icon = cv::imread(m_robot_icon_path);
-  // m_robot_icon_rotated = cv::imread(m_robot_icon_path);
   m_robot_icon = cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
   m_robot_icon_rotated = cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
   m_start_timer = false;
@@ -27,7 +24,8 @@ MappingScreenRenderer::MappingScreenRenderer()
 #endif
 
   // ROS Subscribers
-  m_subscriber_map = m_nh.subscribe<nav_msgs::OccupancyGrid>("/map", 1, &MappingScreenRenderer::mapCallback, this);
+  m_subscriber_map = m_nh.subscribe<nav_msgs::OccupancyGrid>(
+      "/map", 1, &MappingScreenRenderer::mapCallback, this);
 
   // ROS Publishers
   m_publisher_rendered_image =
@@ -100,10 +98,14 @@ void MappingScreenRenderer::mapCallback(
   // Update Map Info
   m_map_meta_data = msg_map->info;
 
-  if (m_robot_icon.cols != static_cast<int>(0.5/m_map_meta_data.resolution) || m_robot_icon.rows != static_cast<int>(0.5/m_map_meta_data.resolution))
-  {
-    cv::resize(m_robot_icon, m_robot_icon, cv::Size(0.5/m_map_meta_data.resolution, 0.5/m_map_meta_data.resolution));
-    cv::resize(m_robot_icon_rotated, m_robot_icon_rotated, cv::Size(0.5/m_map_meta_data.resolution, 0.5/m_map_meta_data.resolution));  
+  if (m_robot_icon.cols != static_cast<int>(0.5 / m_map_meta_data.resolution) ||
+      m_robot_icon.rows != static_cast<int>(0.5 / m_map_meta_data.resolution)) {
+    cv::resize(m_robot_icon, m_robot_icon,
+               cv::Size(0.5 / m_map_meta_data.resolution,
+                        0.5 / m_map_meta_data.resolution));
+    cv::resize(m_robot_icon_rotated, m_robot_icon_rotated,
+               cv::Size(0.5 / m_map_meta_data.resolution,
+                        0.5 / m_map_meta_data.resolution));
   }
 
 #ifdef DEBUG_MODE
@@ -127,25 +129,21 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
 
   ////////////////////////////////////////////////////////////////
   // Get Robot to Map Transformation
-  try
-  {
-      m_robot_to_map_tf = m_tf_buffer.lookupTransform("map", "base_link", ros::Time::now(), ros::Duration(1.0));
-  }
-  catch (tf2::TransformException &ex)
-  {
-      ROS_WARN("%s", ex.what());
-      return;
+  try {
+    m_robot_to_map_tf = m_tf_buffer.lookupTransform(
+        "map", "base_link", ros::Time::now(), ros::Duration(1.0));
+  } catch (tf2::TransformException &ex) {
+    ROS_WARN("%s", ex.what());
+    return;
   }
 
   // get x, y, yaw
   double x = m_robot_to_map_tf.transform.translation.x;
   double y = m_robot_to_map_tf.transform.translation.y;
-  tf2::Quaternion rotation_quaternion(
-    m_robot_to_map_tf.transform.rotation.x,
-    m_robot_to_map_tf.transform.rotation.y,
-    m_robot_to_map_tf.transform.rotation.z,
-    m_robot_to_map_tf.transform.rotation.w
-  );
+  tf2::Quaternion rotation_quaternion(m_robot_to_map_tf.transform.rotation.x,
+                                      m_robot_to_map_tf.transform.rotation.y,
+                                      m_robot_to_map_tf.transform.rotation.z,
+                                      m_robot_to_map_tf.transform.rotation.w);
   tf2::Matrix3x3 rotation_matrix(rotation_quaternion);
   double roll, pitch, yaw;
   rotation_matrix.getRPY(roll, pitch, yaw);
@@ -156,8 +154,8 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
 
   ////////////////////////////////////////////////////////////////
   // Rotate Robot Icon by Yaw
-  static constexpr double rads_to_degrees = 180./3.14159;
-  rotateImage(m_robot_icon, m_robot_icon_rotated, yaw*rads_to_degrees);
+  static constexpr double rads_to_degrees = 180. / 3.14159;
+  rotateImage(m_robot_icon, m_robot_icon_rotated, yaw * rads_to_degrees);
 
 #ifdef DEBUG_MODE
   cv::imshow("Robot Icon Rotated", m_robot_icon_rotated);
@@ -181,7 +179,6 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
   cv::imshow("Final Map Render", m_map_render);
   cv::waitKey(1);
 #endif
-
 }
 
 int main(int argc, char **argv) {
