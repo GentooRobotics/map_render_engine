@@ -132,7 +132,7 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
   // Get Robot to Map Transformation
   try {
     m_robot_to_map_tf = m_tf_buffer.lookupTransform(
-        "map", "base_link", ros::Time::now(), ros::Duration(1.0));
+        "map", "base_link", event.current_real, ros::Duration(1.0));
   } catch (tf2::TransformException &ex) {
     ROS_WARN("%s", ex.what());
     return;
@@ -179,7 +179,6 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
   // Copy Rotated Robot Icon To Map
   cv::Rect roi(x_image, y_image, m_robot_icon_rotated.cols, m_robot_icon_rotated.rows);
   cv::Mat original_region = m_map_render(roi).clone(); // part of the render that is going to replaced by robot icon
-  cv::Mat blended_region;
 
   std::size_t rows = static_cast<std::size_t>(m_map_render(roi).rows);
   std::size_t cols = static_cast<std::size_t>(m_map_render(roi).cols);
@@ -205,6 +204,14 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
   cv::waitKey(1);
 #endif
 
+  ////////////////////////////////////////////////////////////////
+  // Publish Rendered Image
+  std_msgs::Header msg_header;
+  msg_header.frame_id = "map";
+  msg_header.stamp = event.current_real;
+  sensor_msgs::ImagePtr msg_image = cv_bridge::CvImage(msg_header, "rgb8", m_map_render).toImageMsg();
+  m_publisher_rendered_image.publish(msg_image);
+  
   ////////////////////////////////////////////////////////////////
   // Clean Up
   original_region.copyTo(m_map_render(roi)); // replace the roi with original region 
