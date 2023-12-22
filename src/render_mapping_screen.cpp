@@ -16,10 +16,8 @@ MappingScreenRenderer::MappingScreenRenderer() : m_nh_private{"~"} {
   m_map_render = cv::Mat(300, 300, CV_8UC3);
   m_robot_icon =
       cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
-  cv::cvtColor(m_robot_icon, m_robot_icon, cv::COLOR_BGRA2RGBA); // BGRA -> RGBA Conversion
   m_robot_icon_rotated =
       cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
-  cv::cvtColor(m_robot_icon_rotated, m_robot_icon_rotated, cv::COLOR_BGRA2RGBA); // BGRA -> RGBA Conversion
   m_start_timer = false; 
 
 #ifdef DEBUG_MODE
