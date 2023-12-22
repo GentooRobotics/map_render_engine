@@ -13,12 +13,14 @@ MappingScreenRenderer::MappingScreenRenderer() : m_nh_private{"~"} {
       m_nh_private.param<std::string>("robot_icon", "robot.png");
 
   // Variables Initialization
-  m_map_render = cv::Mat(300, 300, CV_8UC4);
+  m_map_render = cv::Mat(300, 300, CV_8UC3);
   m_robot_icon =
       cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
+  cv::cvtColor(m_robot_icon, m_robot_icon, cv::COLOR_BGRA2RGBA); // BGRA -> RGBA Conversion
   m_robot_icon_rotated =
       cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
-  m_start_timer = false;
+  cv::cvtColor(m_robot_icon_rotated, m_robot_icon_rotated, cv::COLOR_BGRA2RGBA); // BGRA -> RGBA Conversion
+  m_start_timer = false; 
 
 #ifdef DEBUG_MODE
   cv::imshow("Robot Icon", m_robot_icon);
@@ -49,7 +51,7 @@ void MappingScreenRenderer::mapCallback(
   if (m_map_render.cols != msg_map->info.width ||
       m_map_render.rows != msg_map->info.height) {
     m_map_render = cv::Mat::zeros(
-        cv::Size(msg_map->info.width, msg_map->info.height), CV_8UC4);
+        cv::Size(msg_map->info.width, msg_map->info.height), CV_8UC3);
   }
 
 #ifdef DEBUG_MODE
@@ -71,22 +73,20 @@ void MappingScreenRenderer::mapCallback(
 
       // Unknown Pixels, Set to Gray
       if (current_data == -1) {
-        p[j * 4 + 0] = static_cast<std::uint8_t>(128); // r
-        p[j * 4 + 1] = static_cast<std::uint8_t>(128); // g
-        p[j * 4 + 2] = static_cast<std::uint8_t>(128); // b
-        p[j * 4 + 3] = static_cast<std::uint8_t>(255); // a
+        p[j * 3 + 0] = static_cast<std::uint8_t>(128); // r
+        p[j * 3 + 1] = static_cast<std::uint8_t>(128); // g
+        p[j * 3 + 2] = static_cast<std::uint8_t>(128); // b
       }
       // Known Pixels, Set to 0-255 based on intensity
       else {
         // Probability to Pixel Value Conversion
         static constexpr float scale_factor = 255. / 100.;
-        p[j * 4 + 0] =
+        p[j * 3 + 0] =
             255 - static_cast<std::uint8_t>(current_data * scale_factor); // r
-        p[j * 4 + 1] =
+        p[j * 3 + 1] =
             255 - static_cast<std::uint8_t>(current_data * scale_factor); // g
-        p[j * 4 + 2] =
+        p[j * 3 + 2] =
             255 - static_cast<std::uint8_t>(current_data * scale_factor); // b
-        p[j * 4 + 3] = 255;                                               // a
       }
     }
   }
@@ -195,9 +195,9 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
       // if robot icon's is not transparent
       // copy pixel value to map render
       if (p2[j * 4 + 3] != 0) {
-        p[j * 4 + 0] = p2[j * 4 + 0];
-        p[j * 4 + 1] = p2[j * 4 + 1];
-        p[j * 4 + 2] = p2[j * 4 + 2];
+        p[j * 3 + 0] = p2[j * 4 + 0];
+        p[j * 3 + 1] = p2[j * 4 + 1];
+        p[j * 3 + 2] = p2[j * 4 + 2];
       }
     }
   }
@@ -212,10 +212,7 @@ void MappingScreenRenderer::timerCallback(const ros::TimerEvent &event) {
   std_msgs::Header msg_header;
   msg_header.frame_id = "map";
   msg_header.stamp = event.current_real;
-
-  cv::Mat final_render;
-  cv::cvtColor(m_map_render, final_render, cv::COLOR_BGRA2RGB);
-  sensor_msgs::ImagePtr msg_image = cv_bridge::CvImage(msg_header, "rgb8", final_render).toImageMsg();
+  sensor_msgs::ImagePtr msg_image = cv_bridge::CvImage(msg_header, "rgb8", m_map_render).toImageMsg();
   m_publisher_rendered_image.publish(msg_image);
   
   ////////////////////////////////////////////////////////////////
