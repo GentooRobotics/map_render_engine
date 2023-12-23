@@ -18,7 +18,7 @@ MappingScreenRenderer::MappingScreenRenderer() : m_nh_private{"~"} {
       cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
   m_robot_icon_rotated =
       cv::imread(m_robot_icon_path, cv::ImreadModes::IMREAD_UNCHANGED);
-  m_start_timer = false; 
+  m_start_timer = false;
 
 #ifdef DEBUG_MODE
   cv::imshow("Robot Icon", m_robot_icon);
