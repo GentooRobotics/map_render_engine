@@ -3,11 +3,13 @@
 
     <!-- Mapping Screen Renderer -->
     <group ns="renders">
-        <node pkg="map_render_engine" name="mapping_screen_renderer" type="render_mapping_screen" output="screen"/>
+        <node pkg="map_render_engine" name="mapping_screen_renderer" type="render_mapping_screen" output="screen">
+            <param name="robot_icon" value="$(find map_render_engine)/assets/robot.png"/>
+        </node>
     </group>
 
     <!-- Rosbag Player -->
-    <node pkg="rosbag" type="play" name="bagplayer" args="/home/yuanqichau/mapping_bag.bag -r 5 -l --clock" />
+    <node pkg="rosbag" type="play" name="bagplayer" args="/home/yuanqichau/perceptron/render_ws/src/map_render_engine/2d_mapping.bag -l --clock" />
 
     <!-- Rviz  -->
     <!-- <node pkg="rviz" type="rviz" name="rviz" args="-d /home/yuanqichau/Desktop/clustering.rviz" /> -->

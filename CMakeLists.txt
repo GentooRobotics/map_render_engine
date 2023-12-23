@@ -6,7 +6,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG_MODE")
 find_package(OpenCV)
 
 find_package(catkin REQUIRED COMPONENTS
-    message_filters
     roscpp
     std_msgs
     sensor_msgs
@@ -19,7 +18,6 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
     CATKIN_DEPENDS   
-    message_filters
     roscpp
     std_msgs
     sensor_msgs
@@ -57,6 +55,10 @@ install(DIRECTORY include/
 
 install(DIRECTORY launch/
   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch 
+)
+
+install(DIRECTORY assets/
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/assets 
 )
 
 install(DIRECTORY include/${PROJECT_NAME}/
